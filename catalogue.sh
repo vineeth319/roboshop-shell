@@ -1,7 +1,7 @@
 USER_ID=$(id -u)
 TIMESTAMP=$(date +%F-%H-%M-%S)
 LOG_FILE="/tmp/$0-$TIMESTAMP.log"
-MONGDB_HOST="mongodb.vineeth.online"
+MONGDB_HOST="18.215.155.33"
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
@@ -71,7 +71,7 @@ systemctl start catalogue &>> $LOGFILE &>> $LOG_FILE
 
 VALIDATE $? "Starting catalogue"
 
-cp /home/centos/roboshop-shell/mongo.repo /etc/yum.repos.d/mongo.repo &>> $LOG_FILE
+cp /home/ec2-user/roboshop-shell/mongo.repo /etc/yum.repos.d/mongo.repo &>> $LOG_FILE
 
 VALIDATE $? "copying mongodb repo"
 
