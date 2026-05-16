@@ -79,5 +79,5 @@ dnf install mongodb-mongosh -y
 
 validate $? "Installing MongoDB client"
 
-mongosh --host $MONGDB_HOST </app/db/master-data.js &>> $LOG_FILE
+mongosh --host 18.215.155.33 </app/db/master-data.js &>> $LOG_FILE
 validate $? "Loading catalouge data into MongoDB"
