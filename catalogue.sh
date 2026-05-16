@@ -61,24 +61,24 @@ validate $? "copy catalogue.service"
 
 systemctl daemon-reload &>> $LOG_FILE
 
-VALIDATE $? "catalogue daemon reload" &>> $LOG_FILE
+validate $? "catalogue daemon reload" &>> $LOG_FILE
 
-systemctl enable catalogue &>> $LOGFILE &>> $LOG_FILE
+systemctl enable catalogue &>> $LOG_FILE 
 
-VALIDATE $? "Enable catalogue"
+validate $? "Enable catalogue"
 
-systemctl start catalogue &>> $LOGFILE &>> $LOG_FILE
+systemctl start catalogue &>> $LOG_FILE 
 
-VALIDATE $? "Starting catalogue"
+validate $? "Starting catalogue"
 
 cp /home/ec2-user/roboshop-shell/mongo.repo /etc/yum.repos.d/mongo.repo &>> $LOG_FILE
 
-VALIDATE $? "copying mongodb repo"
+validate $? "copying mongodb repo"
 
 dnf install mongodb-mongosh -y
 
-VALIDATE $? "Installing MongoDB client"
+validate $? "Installing MongoDB client"
 
 mongosh --host $MONGDB_HOST </app/schema/catalogue.js &>> $LOG_FILE
 
-VALIDATE $? "Loading catalouge data into MongoDB"
+validate $? "Loading catalouge data into MongoDB"
