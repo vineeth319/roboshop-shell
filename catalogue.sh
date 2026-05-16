@@ -1,7 +1,7 @@
 USER_ID=$(id -u)
 TIMESTAMP=$(date +%F-%H-%M-%S)
 LOG_FILE="/tmp/$0-$TIMESTAMP.log"
-MONGDB_HOST="18.215.155.33"
+MONGDB_HOST=18.215.155.33
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
@@ -80,5 +80,4 @@ dnf install mongodb-mongosh -y
 validate $? "Installing MongoDB client"
 
 mongosh --host $MONGDB_HOST </app/db/master-data.js &>> $LOG_FILE
-
 validate $? "Loading catalouge data into MongoDB"
