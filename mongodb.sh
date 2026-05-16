@@ -25,8 +25,8 @@ validate() {
     fi
 }
 
-cp mongo.repo /etc/yum.repos.d/mongo.repo
-VALIDATE $? "Copied MongoDB Repo"
+cp /home/ec2-user/roboshop-shell/mongo.repo /etc/yum.repos.d/mongo.repo
+validate $? "Copied MongoDB Repo"
 dnf install mongodb-org -y &>> $LOG_FILE
 validate $? "Insatll mongodb"
 systemctl enable mongod 
@@ -34,6 +34,6 @@ validate $? "Enabled mongodb"
 systemctl start mongod 
 validate $? "Start of mongodb"
 sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mongod.conf &>> $LOG_FILE
-VALIDATE $? "Remote access to MongoDB"
+validate $? "Remote access to MongoDB"
 systemctl restart mongod &>> $LOG_FILE
-VALIDATE $? "Restarting MongoDB"
+validate $? "Restarting MongoDB"
