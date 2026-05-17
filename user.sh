@@ -35,7 +35,7 @@ validate $? "Enabled nodejs:20 version"
 dnf install nodejs -y &>> $LOG_FILE
 validate $? "Install nodejs:20 version"
 
-id roboshop #if roboshop user does not exist, then it is failure
+id roboshop &>> $LOG_FILE #if roboshop user does not exist, then it is failure  
 if [ $? -ne 0 ]
 then
     useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $LOG_FILE
