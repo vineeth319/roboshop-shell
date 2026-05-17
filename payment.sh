@@ -19,13 +19,14 @@ validate() {
     if [ "$1" -ne 0 ]
     then
         echo -e "$2 ... ${R}FAILED${N}"
+        exit 1
     else
         echo -e "$2 ... ${G}SUCCESS${N}"
     fi
 }
 
 
-dnf install python36 gcc python3-devel -y &>> LOG_FILE
+dnf install python3 gcc python3-devel -y &>> LOG_FILE
 
 id roboshop &>> LOG_FILE #if roboshop user does not exist, then it is failure
 if [ $? -ne 0 ]
@@ -47,13 +48,13 @@ cd /app
 unzip -o /tmp/payment.zip &>> $LOG_FILE
 validate $? "payment user code"
 
-pip3.6 install -r requirements.txt &>> LOG_FILE
+pip3 install -r requirements.txt &>> LOG_FILE
 validate $? "install dependencies"
 
 cp /home/ec2-user/roboshop-shell/payment.service /etc/systemd/system/user.service
 validate $? "copy user.service"
 
-systemctl daemon-reload &>> $LOG_FILE &>> LOG_FILE
+systemctl daemon-reload &>> $LOG_FILE 
 validate $? "user daemon reload" 
 
 systemctl enable user &>> $LOG_FILE 
