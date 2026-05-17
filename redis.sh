@@ -1,8 +1,7 @@
 #!/bin/bash
+LOG_FILE="/tmp/$0-$TIMESTAMP.log"
 USER_ID=$(id -u) &>> $LOG_FILE
 TIMESTAMP=$(date +%F-%H-%M-%S)
-LOG_FILE="/tmp/$0-$TIMESTAMP.log"
-
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
@@ -30,6 +29,9 @@ dnf module disable redis -y &>> $LOG_FILE
 validate $? "disable redis"
 dnf module enable redis:7 -y &>> $LOG_FILE
 validate $? "enable redis:7"
+
+dnf install redis -y 
+validate $? "Install redis:7"
 
 sed -i 's/127.0.0.1/0.0.0.0/g' /etc/redis/redis.conf &>> $LOG_FILE
 validate $? "change local host to all hosts"
