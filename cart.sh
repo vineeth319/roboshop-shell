@@ -56,7 +56,7 @@ validate $? "unzip cart code"
 npm install  &>> $LOG_FILE
 validate $? "install dependencies"
 
-cp /home/ec2-cart/roboshop-shell/cart.service /etc/systemd/system/cart.service
+cp /home/ec2-user/roboshop-shell/cart.service /etc/systemd/system/cart.service
 validate $? "copy cart.service"
 
 systemctl daemon-reload &>> $LOG_FILE
