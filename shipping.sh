@@ -35,7 +35,7 @@ curl -L -o /tmp/shipping.zip https://roboshop-artifacts.s3.amazonaws.com/shippin
 cd /app 
 unzip -o /tmp/shipping.zip
 
-mvn clean package 
+mvn clean package  &>> $LOG_FILE
 mv target/shipping-1.0.jar shipping.jar 
 
 

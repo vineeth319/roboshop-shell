@@ -2,7 +2,6 @@
 USER_ID=$(id -u)
 TIMESTAMP=$(date +%F-%H-%M-%S)
 LOG_FILE="/tmp/$0-$TIMESTAMP.log"
-mysql_host=mysql.vineeth.online
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
@@ -41,7 +40,7 @@ fi
 mkdir -p /app &>> $LOG_FILE
 validate $? "create app dir"
 
-curl -o -L /tmp/payment.zip https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip &>> $LOG_FILE
+curl -L -o  /tmp/payment.zip https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip &>> $LOG_FILE
 validate $? "download user code"
 
 cd /app

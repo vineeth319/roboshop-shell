@@ -28,7 +28,7 @@ validate() {
 cp /home/ec2-user/roboshop-shell/rabbitmq.repo /etc/yum.repos.d/rabbitmq.repo
 validate $? "Copied rabbitmq Repo"
 
-dnf install rabbitmq-server -y
+dnf install rabbitmq-server -y &>> $LOG_FILE
 validate $? "Insatll RabbitMQ"
 
 systemctl enable rabbitmq-server 
@@ -38,8 +38,8 @@ systemctl start rabbitmq-server
 validate $? "Start of RabbitMQ"
 
 
-rabbitmqctl add_user roboshop roboshop123
+rabbitmqctl add_user roboshop roboshop123 &>> $LOG_FILE
 validate $? "Add RabbitMQ User"
 
-rabbitmqctl set_permissions -p / roboshop ".*" ".*" ".*"
+rabbitmqctl set_permissions -p / roboshop ".*" ".*" ".*" &>> $LOG_FILE
 validate $? "All previliges to  RabbitMQ roboshop User"
