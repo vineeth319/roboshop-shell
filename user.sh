@@ -1,4 +1,5 @@
-USER_ID=$(id -u)
+#!/bin/bash
+USER_ID=$(id -u) &>> $LOG_FILE
 TIMESTAMP=$(date +%F-%H-%M-%S)
 LOG_FILE="/tmp/$0-$TIMESTAMP.log"
 R="\e[31m"
@@ -45,3 +46,27 @@ fi
 
 mkdir -p /app &>> $LOG_FILE
 validate $? "create app dir"
+
+curl -o -L /tmp/user.zip https://roboshop-artifacts.s3.amazonaws.com/user-v3.zip &>> $LOG_FILE
+validate $? "download user code"
+cd /app
+unzip -o /tmp/user.zip &>> $LOG_FILE
+validate $? "unzip user code"
+
+npm install  &>> $LOG_FILE
+validate $? "install dependencies"
+
+cp /home/ec2-user/roboshop-shell/user.service /etc/systemd/system/user.service
+validate $? "copy user.service"
+
+systemctl daemon-reload &>> $LOG_FILE
+
+validate $? "user daemon reload" &>> $LOG_FILE
+
+systemctl enable user &>> $LOG_FILE 
+
+validate $? "Enable user"
+
+systemctl start user &>> $LOG_FILE 
+
+validate $? "Starting user"

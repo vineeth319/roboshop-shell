@@ -1,3 +1,4 @@
+#!/bin/bash
 USER_ID=$(id -u)
 TIMESTAMP=$(date +%F-%H-%M-%S)
 LOG_FILE="/tmp/$0-$TIMESTAMP.log"
@@ -79,5 +80,5 @@ dnf install mongodb-mongosh -y
 
 validate $? "Installing MongoDB client"
 
-mongosh --host 18.215.155.33 </app/db/master-data.js &>> $LOG_FILE
+mongosh --host mongodb.vineeth.online </app/db/master-data.js &>> $LOG_FILE
 validate $? "Loading catalouge data into MongoDB"
