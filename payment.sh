@@ -7,7 +7,7 @@ R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
-exec &>> LOG_FILE
+
 if [ "$USER_ID" -ne 0 ]
 then
     echo -e "${R}Please login as root user${N}"
@@ -26,9 +26,9 @@ validate() {
 }
 
 
-dnf install python36 gcc python3-devel -y
+dnf install python36 gcc python3-devel -y &>> LOG_FILE
 
-id roboshop #if roboshop user does not exist, then it is failure
+id roboshop &>> LOG_FILE #if roboshop user does not exist, then it is failure
 if [ $? -ne 0 ]
 then
     useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $LOG_FILE
@@ -48,14 +48,14 @@ cd /app
 unzip -o /tmp/payment.zip &>> $LOG_FILE
 validate $? "payment user code"
 
-pip3.6 install -r requirements.txt
+pip3.6 install -r requirements.txt &>> LOG_FILE
 validate $? "install dependencies"
 
 cp /home/ec2-user/roboshop-shell/payment.service /etc/systemd/system/user.service
 validate $? "copy user.service"
 
-systemctl daemon-reload &>> $LOG_FILE
-validate $? "user daemon reload" &>> $LOG_FILE
+systemctl daemon-reload &>> $LOG_FILE &>> LOG_FILE
+validate $? "user daemon reload" 
 
 systemctl enable user &>> $LOG_FILE 
 validate $? "Enable user"

@@ -7,7 +7,7 @@ R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
-exec &>> LOG_FILE
+
 if [ "$USER_ID" -ne 0 ]
 then
     echo -e "${R}Please login as root user${N}"
@@ -39,7 +39,7 @@ mvn clean package
 mv target/shipping-1.0.jar shipping.jar 
 
 
-cp /home/ec2-cart/roboshop-shell/shipping.service /etc/systemd/system/shipping.service
+cp /home/ec2-user/roboshop-shell/shipping.service /etc/systemd/system/shipping.service
 validate $? "copy shipping.service"
 
 systemctl daemon-reload &>> $LOG_FILE
