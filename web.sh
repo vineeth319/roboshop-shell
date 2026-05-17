@@ -15,7 +15,7 @@ fi
 
 mkdir -p $LOGS_FOLDER
 
-VALIDATE(){
+validate(){
     if [ $1 -ne 0 ]; then
         echo -e "$2 ... $R FAILURE $N" | tee -a $LOGS_FILE
         exit 1
@@ -34,21 +34,21 @@ dnf install nginx  -y &>> $LOGS_FILE
 validate $? "Install nginx:1.24 version"
 
 rm -rf /usr/share/nginx/html/* 
-VALIDATE $? "Remove default content"
+validate $? "Remove default content"
 
 curl -o /tmp/frontend.zip https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip
-VALIDATE $? "Downloaded  frontend"
+validate $? "Downloaded  frontend"
 
 cd /usr/share/nginx/html 
 
 unzip /tmp/frontend.zip
-VALIDATE $? "Unzipped frontend"
+validate $? "Unzipped frontend"
 
 rm -rf /etc/nginx/nginx.conf
-VALIDATE $? "Remove default nginx configuration"
+validate $? "Remove default nginx configuration"
 
 cp /home/ec2-user/roboshop-shell/nginx.conf /etc/nginx/nginx.conf
-VALIDATE $? "Copied our nginx conf file"
+validate $? "Copied our nginx conf file"
 
 systemctl restart nginx 
-VALIDATE $? "Restarted Nginx"
+validate $? "Restarted Nginx"
