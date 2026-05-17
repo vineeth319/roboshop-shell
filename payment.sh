@@ -1,64 +1,89 @@
 #!/bin/bash
+
 USER_ID=$(id -u)
-TIMESTAMP=$(date +%F-%H-%M-%S)
-LOG_FILE="/tmp/$0-$TIMESTAMP.log"
+
+SCRIPT_NAME=$(basename "$0")
+
+LOGS_FOLDER="/var/log/shell-roboshop"
+LOGS_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
+
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
+mkdir -p "$LOGS_FOLDER"
+
+# Root user validation
 if [ "$USER_ID" -ne 0 ]
 then
-    echo -e "${R}Please login as root user${N}"
+    echo -e "${R}Please run this script with root user access${N}" | tee -a "$LOGS_FILE"
     exit 1
-else
-    echo -e "${G}Logged in as Root user${N}"
 fi
 
+# Validation function
 validate() {
     if [ "$1" -ne 0 ]
     then
-        echo -e "$2 ... ${R}FAILED${N}"
+        echo -e "$2 ... ${R}FAILED${N}" | tee -a "$LOGS_FILE"
         exit 1
     else
-        echo -e "$2 ... ${G}SUCCESS${N}"
+        echo -e "$2 ... ${G}SUCCESS${N}" | tee -a "$LOGS_FILE"
     fi
 }
 
+echo "Script execution started at: $(date)" | tee -a "$LOGS_FILE"
 
-dnf install python3 gcc python3-devel -y &>> LOG_FILE
+# Install python dependencies
+dnf install python3 gcc python3-devel -y &>> "$LOGS_FILE"
+validate $? "Install Python dependencies"
 
-id roboshop &>> LOG_FILE #if roboshop user does not exist, then it is failure
-if [ $? -ne 0 ]
+# Check roboshop user
+if ! id roboshop &>> "$LOGS_FILE"
 then
-    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $LOG_FILE
-    validate $? "create roboshop system user"
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> "$LOGS_FILE"
+    validate $? "Create roboshop system user"
 else
-    echo -e "roboshop user already exist $Y SKIPPING $N"
+    echo -e "roboshop user already exists ... ${Y}SKIPPING${N}" | tee -a "$LOGS_FILE"
 fi
 
+# Create app directory
+mkdir -p /app &>> "$LOGS_FILE"
+validate $? "Create app directory"
 
-mkdir -p /app &>> $LOG_FILE
-validate $? "create app dir"
+# Download payment application
+curl -L -o /tmp/payment.zip https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip &>> "$LOGS_FILE"
+validate $? "Download payment application"
 
-curl -L -o  /tmp/payment.zip https://roboshop-artifacts.s3.amazonaws.com/payment-v3.zip &>> $LOG_FILE
-validate $? "download user code"
+# Change to app directory
+cd /app &>> "$LOGS_FILE"
+validate $? "Change to app directory"
 
-cd /app
-unzip -o /tmp/payment.zip &>> $LOG_FILE
-validate $? "payment user code"
+# Extract payment application
+unzip -o /tmp/payment.zip &>> "$LOGS_FILE"
+validate $? "Extract payment application"
 
-pip3 install -r requirements.txt &>> LOG_FILE
-validate $? "install dependencies"
+# Install python dependencies
+pip3 install -r requirements.txt &>> "$LOGS_FILE"
+validate $? "Install Python dependencies for payment"
 
-cp /home/ec2-user/roboshop-shell/payment.service /etc/systemd/system/user.service
-validate $? "copy user.service"
+# Get script directory
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-systemctl daemon-reload &>> $LOG_FILE 
-validate $? "user daemon reload" 
+# Copy payment service file
+cp "$SCRIPT_DIR/payment.service" /etc/systemd/system/payment.service &>> "$LOGS_FILE"
+validate $? "Copy payment.service"
 
-systemctl enable user &>> $LOG_FILE 
-validate $? "Enable user"
+# Reload systemd
+systemctl daemon-reload &>> "$LOGS_FILE"
+validate $? "Reload systemd"
 
-systemctl start user &>> $LOG_FILE 
-validate $? "Starting user"
+# Enable payment service
+systemctl enable payment &>> "$LOGS_FILE"
+validate $? "Enable payment service"
+
+# Start payment service
+systemctl restart payment &>> "$LOGS_FILE"
+validate $? "Start payment service"
+
+echo -e "${G}Payment setup completed successfully${N}" | tee -a "$LOGS_FILE"

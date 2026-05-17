@@ -1,71 +1,96 @@
 #!/bin/bash
+
 USER_ID=$(id -u)
+
 LOGS_FOLDER="/var/log/shell-roboshop"
-LOGS_FILE="$LOGS_FOLDER/$0.log"
+SCRIPT_NAME=$(basename "$0")
+LOGS_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
 
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
-mkdir -p $LOGS_FOLDER
+mkdir -p "$LOGS_FOLDER"
 
-if [ "$USERID" -ne 0 ]; then
-    echo -e "$R Please run this script with root user access $N" | tee -a $LOGS_FILE
+# Root user check
+if [ "$USER_ID" -ne 0 ]
+then
+    echo -e "${R}Please run this script with root user access${N}" | tee -a "$LOGS_FILE"
     exit 1
 fi
 
+# Validation function
 validate() {
     if [ "$1" -ne 0 ]
     then
-        echo -e "$2 ... ${R}FAILED${N}" | tee -a $LOGS_FILE
+        echo -e "$2 ... ${R}FAILED${N}" | tee -a "$LOGS_FILE"
         exit 1
     else
-        echo -e "$2 ... ${G}SUCCESS${N}" | tee -a $LOGS_FILE
+        echo -e "$2 ... ${G}SUCCESS${N}" | tee -a "$LOGS_FILE"
     fi
 }
 
-dnf module disable nodejs -y &>> $LOGS_FILE
-validate $? "disabled nodejs default version"
+echo "Script execution started at: $(date)" | tee -a "$LOGS_FILE"
 
-dnf module enable nodejs:20 -y &>> $LOGS_FILE
-validate $? "Enabled nodejs:20 version"
+# Disable default nodejs module
+dnf module disable nodejs -y &>> "$LOGS_FILE"
+validate $? "Disable default nodejs"
 
-dnf install nodejs -y &>> $LOGS_FILE
-validate $? "Install nodejs:20 version"
+# Enable nodejs 20
+dnf module enable nodejs:20 -y &>> "$LOGS_FILE"
+validate $? "Enable nodejs:20"
 
-id roboshop &>> $LOGS_FILE #if roboshop user does not exist, then it is failure  
-if [ $? -ne 0 ]
+# Install nodejs
+dnf install nodejs -y &>> "$LOGS_FILE"
+validate $? "Install nodejs"
+
+# Create roboshop user if not exists
+if ! id roboshop &>> "$LOGS_FILE"
 then
-    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> $LOGS_FILE
-    validate $? "create roboshop system user"
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> "$LOGS_FILE"
+    validate $? "Create roboshop user"
 else
-    echo -e "roboshop user already exist $Y SKIPPING $N"
+    echo -e "roboshop user already exists ... ${Y}SKIPPING${N}" | tee -a "$LOGS_FILE"
 fi
 
+# Create application directory
+mkdir -p /app &>> "$LOGS_FILE"
+validate $? "Create app directory"
 
-mkdir -p /app &>> $LOGS_FILE
-validate $? "create app dir"
+# Download cart application code
+curl -L -o /tmp/cart.zip https://roboshop-artifacts.s3.amazonaws.com/cart-v3.zip &>> "$LOGS_FILE"
+validate $? "Download cart application code"
 
-curl -L -o  /tmp/cart.zip https://roboshop-artifacts.s3.amazonaws.com/cart-v3.zip &>> $LOGS_FILE
-validate $? "download cart code"
+# Change to application directory
+cd /app &>> "$LOGS_FILE"
+validate $? "Change to app directory"
 
-cd /app
+# Extract application code
+unzip -o /tmp/cart.zip &>> "$LOGS_FILE"
+validate $? "Extract cart application code"
 
-unzip -o /tmp/cart.zip &>> $LOGS_FILE
-validate $? "unzip cart code"
+# Install nodejs dependencies
+npm install &>> "$LOGS_FILE"
+validate $? "Install nodejs dependencies"
 
-npm install  &>> $LOGS_FILE
-validate $? "install dependencies"
+# Get script directory
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-cp /home/ec2-user/roboshop-shell/cart.service /etc/systemd/system/cart.service
-validate $? "copy cart.service"
+# Copy service file
+cp "$SCRIPT_DIR/cart.service" /etc/systemd/system/cart.service &>> "$LOGS_FILE"
+validate $? "Copy cart.service"
 
-systemctl daemon-reload &>> $LOGS_FILE
-validate $? "cart daemon reload" &>> $LOGS_FILE
+# Reload systemd
+systemctl daemon-reload &>> "$LOGS_FILE"
+validate $? "Reload systemd"
 
-systemctl enable cart &>> $LOGS_FILE 
-validate $? "Enable cart"
+# Enable cart service
+systemctl enable cart &>> "$LOGS_FILE"
+validate $? "Enable cart service"
 
-systemctl start cart &>> $LOGS_FILE 
-validate $? "Starting cart"
+# Restart cart service
+systemctl restart cart &>> "$LOGS_FILE"
+validate $? "Restart cart service"
+
+echo -e "${G}Cart service setup completed successfully${N}" | tee -a "$LOGS_FILE"

@@ -1,67 +1,112 @@
 #!/bin/bash
+
 USER_ID=$(id -u)
-TIMESTAMP=$(date +%F-%H-%M-%S)
-LOG_FILE="/tmp/$0-$TIMESTAMP.log"
-mysql_host=mysql.vineeth.online
+
+LOGS_FOLDER="/var/log/shell-roboshop"
+SCRIPT_NAME=$(basename "$0")
+LOGS_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
+
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
+mkdir -p "$LOGS_FOLDER"
+
+# Root user validation
 if [ "$USER_ID" -ne 0 ]
 then
-    echo -e "${R}Please login as root user${N}"
+    echo -e "${R}Please run this script with root user access${N}" | tee -a "$LOGS_FILE"
     exit 1
-else
-    echo -e "${G}Logged in as Root user${N}"
 fi
 
+# Validation function
 validate() {
     if [ "$1" -ne 0 ]
     then
-        echo -e "$2 ... ${R}FAILED${N}"
+        echo -e "$2 ... ${R}FAILED${N}" | tee -a "$LOGS_FILE"
+        exit 1
     else
-        echo -e "$2 ... ${G}SUCCESS${N}"
+        echo -e "$2 ... ${G}SUCCESS${N}" | tee -a "$LOGS_FILE"
     fi
 }
 
+echo "Script execution started at: $(date)" | tee -a "$LOGS_FILE"
 
-dnf install maven -y
-validate $? "Install nodejs:20 version"
-useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop
-mkdir -p /app
+# Install maven
+dnf install maven -y &>> "$LOGS_FILE"
+validate $? "Install maven"
 
-curl -L -o /tmp/shipping.zip https://roboshop-artifacts.s3.amazonaws.com/shipping-v3.zip 
-cd /app 
-unzip -o /tmp/shipping.zip
+# Create roboshop user if not exists
+if ! id roboshop &>> "$LOGS_FILE"
+then
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>> "$LOGS_FILE"
+    validate $? "Create roboshop user"
+else
+    echo -e "roboshop user already exists ... ${Y}SKIPPING${N}" | tee -a "$LOGS_FILE"
+fi
 
-mvn clean package  &>> $LOG_FILE
-mv target/shipping-1.0.jar shipping.jar 
+# Create app directory
+mkdir -p /app &>> "$LOGS_FILE"
+validate $? "Create app directory"
 
+# Download shipping application
+curl -L -o /tmp/shipping.zip https://roboshop-artifacts.s3.amazonaws.com/shipping-v3.zip &>> "$LOGS_FILE"
+validate $? "Download shipping application"
 
-cp /home/ec2-user/roboshop-shell/shipping.service /etc/systemd/system/shipping.service
-validate $? "copy shipping.service"
+# Change to app directory
+cd /app &>> "$LOGS_FILE"
+validate $? "Change to app directory"
 
-systemctl daemon-reload &>> $LOG_FILE
-validate $? "shipping daemon reload" &>> $LOG_FILE
+# Extract application
+unzip -o /tmp/shipping.zip &>> "$LOGS_FILE"
+validate $? "Extract shipping application"
 
-systemctl enable shipping &>> $LOG_FILE 
-validate $? "Enable shipping"
+# Build package
+mvn clean package &>> "$LOGS_FILE"
+validate $? "Build shipping package"
 
-systemctl start shipping &>> $LOG_FILE 
-validate $? "Starting shipping"
+# Rename jar
+mv target/shipping-1.0.jar shipping.jar &>> "$LOGS_FILE"
+validate $? "Rename shipping jar"
 
-dnf install mysql -y 
+# Get script directory
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
+# Copy service file
+cp "$SCRIPT_DIR/shipping.service" /etc/systemd/system/shipping.service &>> "$LOGS_FILE"
+validate $? "Copy shipping.service"
+
+# Reload systemd
+systemctl daemon-reload &>> "$LOGS_FILE"
+validate $? "Reload systemd"
+
+# Enable shipping service
+systemctl enable shipping &>> "$LOGS_FILE"
+validate $? "Enable shipping service"
+
+# Start shipping service
+systemctl start shipping &>> "$LOGS_FILE"
+validate $? "Start shipping service"
+
+# Install mysql client
+dnf install mysql -y &>> "$LOGS_FILE"
 validate $? "Install mysql client"
 
-mysql -h $mysql_host -uroot -pRoboShop@1 < /app/db/schema.sql
-validate $? "Insert Schema"
+# Load schema
+mysql -h "$mysql_host" -uroot -pRoboShop@1 < /app/db/schema.sql &>> "$LOGS_FILE"
+validate $? "Load schema"
 
-mysql -h $mysql_host -uroot -pRoboShop@1 < /app/db/app-user.sql 
-validate $? "Insert app-user"
+# Load app-user data
+mysql -h "$mysql_host" -uroot -pRoboShop@1 < /app/db/app-user.sql &>> "$LOGS_FILE"
+validate $? "Load app-user data"
 
-mysql -h $mysql_host -uroot -pRoboShop@1 < /app/db/master-data.sql
-validate $? "Insert master-data"
+# Load master-data
+mysql -h "$mysql_host" -uroot -pRoboShop@1 < /app/db/master-data.sql &>> "$LOGS_FILE"
+validate $? "Load master-data"
 
-systemctl restart shipping
-validate $? "Restarting shipping"
+# Restart shipping service
+systemctl restart shipping &>> "$LOGS_FILE"
+validate $? "Restart shipping service"
+
+echo -e "${G}Shipping setup completed successfully${N}" | tee -a "$LOGS_FILE"

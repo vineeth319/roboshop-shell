@@ -1,54 +1,76 @@
 #!/bin/bash
 
-USERID=$(id -u)
+USER_ID=$(id -u)
+
+SCRIPT_NAME=$(basename "$0")
+
 LOGS_FOLDER="/var/log/shell-roboshop"
-LOGS_FILE="$LOGS_FOLDER/$0.log"
+LOGS_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
+
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
-if [ "$USERID" -ne 0 ]; then
-    echo -e "$R Please run this script with root user access $N" | tee -a $LOGS_FILE
+mkdir -p "$LOGS_FOLDER"
+
+# Root user validation
+if [ "$USER_ID" -ne 0 ]
+then
+    echo -e "${R}Please run this script with root user access${N}" | tee -a "$LOGS_FILE"
     exit 1
 fi
 
-mkdir -p $LOGS_FOLDER
-
-validate(){
-    if [ $1 -ne 0 ]; then
-        echo -e "$2 ... $R FAILURE $N" | tee -a $LOGS_FILE
+# Validation function
+validate() {
+    if [ "$1" -ne 0 ]
+    then
+        echo -e "$2 ... ${R}FAILED${N}" | tee -a "$LOGS_FILE"
         exit 1
     else
-        echo -e "$2 ... $G SUCCESS $N" | tee -a $LOGS_FILE
+        echo -e "$2 ... ${G}SUCCESS${N}" | tee -a "$LOGS_FILE"
     fi
 }
 
-dnf module disable nginx  -y &>> $LOGS_FILE
-validate $? "disabled nodejs default version"
+echo "Script execution started at: $(date)" | tee -a "$LOGS_FILE"
 
-dnf module enable nginx:1.24 -y &>> $LOGS_FILE
-validate $? "Enabled nginx:1.24 version"
+# Install nginx
+dnf install nginx -y &>> "$LOGS_FILE"
+validate $? "Install nginx"
 
-dnf install nginx  -y &>> $LOGS_FILE
-validate $? "Install nginx:1.24 version"
+# Enable nginx
+systemctl enable nginx &>> "$LOGS_FILE"
+validate $? "Enable nginx"
 
-rm -rf /usr/share/nginx/html/* 
-validate $? "Remove default content"
+# Start nginx
+systemctl start nginx &>> "$LOGS_FILE"
+validate $? "Start nginx"
 
-curl -o /tmp/frontend.zip https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip
-validate $? "Downloaded  frontend"
+# Remove default nginx content
+rm -rf /usr/share/nginx/html/* &>> "$LOGS_FILE"
+validate $? "Remove default nginx content"
 
-cd /usr/share/nginx/html 
+# Download frontend application
+curl -L -o /tmp/frontend.zip https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip &>> "$LOGS_FILE"
+validate $? "Download frontend application"
 
-unzip /tmp/frontend.zip
-validate $? "Unzipped frontend"
+# Change to nginx html directory
+cd /usr/share/nginx/html &>> "$LOGS_FILE"
+validate $? "Change to nginx html directory"
 
-rm -rf /etc/nginx/nginx.conf
-validate $? "Remove default nginx configuration"
+# Extract frontend application
+unzip -o /tmp/frontend.zip &>> "$LOGS_FILE"
+validate $? "Extract frontend application"
 
-cp /home/ec2-user/roboshop-shell/nginx.conf /etc/nginx/nginx.conf
-validate $? "Copied our nginx conf file"
+# Get script directory
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-systemctl restart nginx 
-validate $? "Restarted Nginx"
+# Copy nginx configuration
+cp "$SCRIPT_DIR/roboshop.conf" /etc/nginx/default.d/roboshop.conf &>> "$LOGS_FILE"
+validate $? "Copy nginx configuration"
+
+# Restart nginx
+systemctl restart nginx &>> "$LOGS_FILE"
+validate $? "Restart nginx"
+
+echo -e "${G}Frontend setup completed successfully${N}" | tee -a "$LOGS_FILE"
