@@ -7,7 +7,7 @@ G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
-exec &>> LOG_FILE
+exec &>> $LOG_FILE
 if [ "$USER_ID" -ne 0 ]
 then
     echo -e "${R}Please login as root user${N}"
