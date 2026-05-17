@@ -5,6 +5,8 @@ USER_ID=$(id -u)
 LOGS_FOLDER="/var/log/shell-roboshop"
 SCRIPT_NAME=$(basename "$0")
 LOGS_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
+# Get script directory
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 R="\e[31m"
 G="\e[32m"
@@ -70,8 +72,7 @@ validate $? "Build shipping package"
 mv target/shipping-1.0.jar shipping.jar &>> "$LOGS_FILE"
 validate $? "Rename shipping jar"
 
-# Get script directory
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
 
 # Copy service file
 cp "$SCRIPT_DIR/shipping.service" /etc/systemd/system/shipping.service &>> "$LOGS_FILE"

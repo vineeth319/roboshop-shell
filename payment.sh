@@ -4,6 +4,9 @@ USER_ID=$(id -u)
 
 SCRIPT_NAME=$(basename "$0")
 
+# Get script directory
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
 LOGS_FOLDER="/var/log/shell-roboshop"
 LOGS_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
 
@@ -67,8 +70,6 @@ validate $? "Extract payment application"
 pip3 install -r requirements.txt &>> "$LOGS_FILE"
 validate $? "Install Python dependencies for payment"
 
-# Get script directory
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # Copy payment service file
 cp "$SCRIPT_DIR/payment.service" /etc/systemd/system/payment.service &>> "$LOGS_FILE"

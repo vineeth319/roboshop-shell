@@ -1,6 +1,8 @@
 #!/bin/bash
 
 USER_ID=$(id -u)
+# Get script directory
+SCRIPT_DIR=$(pwd)
 
 LOGS_FOLDER="/var/log/shell-roboshop"
 SCRIPT_NAME=$(basename "$0")
@@ -74,8 +76,6 @@ validate $? "Extract cart application code"
 npm install &>> "$LOGS_FILE"
 validate $? "Install nodejs dependencies"
 
-# Get script directory
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # Copy service file
 cp "$SCRIPT_DIR/cart.service" /etc/systemd/system/cart.service &>> "$LOGS_FILE"

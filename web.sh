@@ -1,7 +1,8 @@
 #!/bin/bash
 
 USER_ID=$(id -u)
-
+# Get script directory
+SCRIPT_DIR=$(pwd)
 SCRIPT_NAME=$(basename "$0")
 
 LOGS_FOLDER="/var/log/shell-roboshop"
@@ -62,8 +63,7 @@ validate $? "Change to nginx html directory"
 unzip -o /tmp/frontend.zip &>> "$LOGS_FILE"
 validate $? "Extract frontend application"
 
-# Get script directory
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
 
 # Copy nginx configuration
 cp "$SCRIPT_DIR/roboshop.conf" /etc/nginx/default.d/roboshop.conf &>> "$LOGS_FILE"

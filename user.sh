@@ -7,6 +7,9 @@ SCRIPT_NAME=$(basename "$0")
 LOGS_FOLDER="/var/log/shell-roboshop"
 LOGS_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
 
+# Get script directory
+SCRIPT_DIR=$(pwd)
+
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
@@ -75,8 +78,7 @@ validate $? "Extract user application"
 npm install &>> "$LOGS_FILE"
 validate $? "Install nodejs dependencies"
 
-# Get script directory
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
 
 # Copy user service file
 cp "$SCRIPT_DIR/user.service" /etc/systemd/system/user.service &>> "$LOGS_FILE"
