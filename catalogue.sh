@@ -48,7 +48,7 @@ fi
 mkdir -p /app &>> $LOG_FILE
 validate $? "create app dir"
 
-curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip &>> $LOG_FILE
+curl -L -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip &>> $LOG_FILE
 validate $? "download catalogue code"
 cd /app
 unzip -o /tmp/catalogue.zip &>> $LOG_FILE

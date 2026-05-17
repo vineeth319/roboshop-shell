@@ -1,7 +1,7 @@
 #!/bin/bash
+LOG_FILE="/tmp/$0-$TIMESTAMP.log"
 USER_ID=$(id -u) &>> $LOG_FILE
 TIMESTAMP=$(date +%F-%H-%M-%S)
-LOG_FILE="/tmp/$0-$TIMESTAMP.log"
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
