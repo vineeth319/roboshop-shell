@@ -66,8 +66,8 @@ validate $? "Extract frontend application"
 
 
 # Copy nginx configuration
-cp "$SCRIPT_DIR/roboshop.conf" /etc/nginx/default.d/roboshop.conf &>> "$LOGS_FILE"
-validate $? "Copy nginx configuration"
+cp $SCRIPT_DIR/nginx.conf /etc/nginx/nginx.conf
+VALIDATE $? "Copied our nginx conf file"
 
 # Restart nginx
 systemctl restart nginx &>> "$LOGS_FILE"
