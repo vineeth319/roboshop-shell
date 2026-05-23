@@ -7,7 +7,7 @@ SCRIPT_NAME=$(basename "$0")
 LOGS_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
 # Get script directory
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-
+mysql_host=mysql.vineeth.online
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
